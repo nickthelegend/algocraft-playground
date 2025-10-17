@@ -101,7 +101,7 @@ export async function Header() {
             </DropdownMenu>
           ) : (
             <Button asChild variant="outline">
-              <Link href="/api/oauth/callback">Sign In</Link>
+              <Link href="/signin">Sign In</Link>
             </Button>
           )}
         </div>

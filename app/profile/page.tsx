@@ -8,7 +8,7 @@ export default async function ProfilePage() {
   const user = await getUser()
 
   if (!user) {
-    redirect("/api/oauth/callback")
+    redirect("/signin")
   }
 
   return (
