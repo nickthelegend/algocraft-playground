@@ -36,6 +36,30 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Skip username check for certain paths
+  const skipPaths = ['/setup-username', '/api/', '/signin', '/_next/', '/favicon.ico']
+  const shouldSkip = skipPaths.some(path => request.nextUrl.pathname.startsWith(path))
+  
+  if (user && !shouldSkip) {
+    // Check if user has set up username
+    try {
+      const checkResponse = await fetch(`${request.nextUrl.origin}/api/setup-username`, {
+        headers: {
+          'Cookie': request.headers.get('cookie') || ''
+        }
+      })
+      
+      if (checkResponse.ok) {
+        const { hasUsername } = await checkResponse.json()
+        if (!hasUsername) {
+          return NextResponse.redirect(new URL('/setup-username', request.url))
+        }
+      }
+    } catch (error) {
+      console.error('Error checking username:', error)
+    }
+  }
+
   if (request.nextUrl.pathname.startsWith("/deploy") && !user) {
     // Allow the deploy page to render (it will show login form)
     return response

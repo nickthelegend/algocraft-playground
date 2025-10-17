@@ -41,8 +41,12 @@ export async function Header() {
             >
               Smart Contracts
             </Link>
-           
-           
+            <Link
+              href="/leaderboard"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Leaderboard
+            </Link>
           </nav>
         </div>
 

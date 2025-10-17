@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getUser } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { PrismaClient } from "@prisma/client"
+
+const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +19,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name and template type are required" }, { status: 400 })
     }
 
+    // Get user from database to get username
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id }
+    })
+
+    if (!dbUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
     const slugname = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')
 
     const project = await prisma.project.create({
@@ -29,7 +40,7 @@ export async function POST(request: NextRequest) {
         link,
         metadata,
         userId: user.id,
-        username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'user',
+        username: dbUser.username,
         email: user.email!,
       },
     })

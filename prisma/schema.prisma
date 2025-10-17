@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
 }
 
 datasource db {
@@ -14,6 +13,18 @@ datasource db {
   url       = env("DATABASE_URL")
     directUrl = env("DIRECT_URL")
 
+}
+
+model User {
+  id        String    @id
+  username  String    @unique
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  projects  Project[]
+
+  @@map("users")
 }
 
 model Project {
@@ -30,6 +41,7 @@ model Project {
   metadata     Json?    @map("json")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  user         User     @relation(fields: [userId], references: [id])
 
   @@map("projects")
 }

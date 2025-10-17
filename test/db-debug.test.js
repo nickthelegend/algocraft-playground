@@ -5,7 +5,7 @@ console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set')
 console.log('DIRECT_URL:', process.env.DIRECT_URL ? 'Set' : 'Not set')
 
 // Test with direct URL
-const { PrismaClient } = require('../lib/generated/prisma')
+const { PrismaClient } = require('@prisma/client')
 
 async function testDirectConnection() {
   // Override to use direct URL for testing
