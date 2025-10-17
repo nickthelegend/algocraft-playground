@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, X } from "lucide-react"
+import ReCAPTCHA from "react-google-recaptcha"
 
 interface NewProjectFormProps {
   onClose: () => void
@@ -18,6 +19,7 @@ interface NewProjectFormProps {
 
 export function NewProjectForm({ onClose, onProjectCreated }: NewProjectFormProps) {
   const [loading, setLoading] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -30,12 +32,17 @@ export function NewProjectForm({ onClose, onProjectCreated }: NewProjectFormProp
     setLoading(true)
 
     try {
+      if (!recaptchaToken) {
+        console.error('reCAPTCHA verification required')
+        return
+      }
+
       const response = await fetch('/api/add-project', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, recaptchaToken }),
       })
 
       if (response.ok) {
@@ -120,8 +127,16 @@ export function NewProjectForm({ onClose, onProjectCreated }: NewProjectFormProp
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <ReCAPTCHA
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+              onChange={setRecaptchaToken}
+              size="compact"
+            />
+          </div>
+
           <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1" disabled={loading}>
+            <Button type="submit" className="flex-1" disabled={loading || !recaptchaToken}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

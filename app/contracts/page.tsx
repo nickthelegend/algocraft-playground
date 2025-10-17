@@ -73,7 +73,7 @@ export default function ContractsPage() {
 
   const fetchAllProjects = async () => {
     try {
-      const response = await fetch('/api/projects/all')
+      const response = await fetch('/api/contracts')
       if (response.ok) {
         const data = await response.json()
         setProjects(data)
