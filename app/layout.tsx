@@ -21,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+        <script src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`} async defer></script>
         <Suspense fallback={<div>Loading...</div>}>
           <Header />
           <main className="flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">

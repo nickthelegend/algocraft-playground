@@ -30,32 +30,7 @@ interface Project {
   updatedAt: string
 }
 
-const mockContracts = [
-  {
-    id: 1,
-    name: "Token Factory",
-    description: "Create and manage ASA tokens with advanced features including minting, burning, and transfer controls.",
-    language: "TealScript",
-    deployments: 1247,
-    icon: Layers,
-    tags: ["DeFi", "Tokens"],
-    author: "AlgoFoundation",
-    createdAt: "2024-12-15",
-    updatedAt: "2025-01-10",
-  },
-  {
-    id: 2,
-    name: "NFT Marketplace",
-    description: "Full-featured NFT marketplace with bidding, royalties, and atomic transfers built on Algorand.",
-    language: "PyTeal",
-    deployments: 892,
-    icon: Code2,
-    tags: ["NFT", "Marketplace"],
-    author: "AlgoDevs",
-    createdAt: "2024-11-20",
-    updatedAt: "2025-01-08",
-  },
-]
+
 
 const ITEMS_PER_PAGE = 6
 
@@ -87,7 +62,7 @@ export default function ContractsPage() {
   }
 
   const filteredAndSortedContracts = useMemo(() => {
-    const allContracts = [...projects, ...mockContracts]
+    const allContracts = [...projects]
     const filtered = allContracts.filter(
       (contract) =>
         contract.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -131,7 +106,7 @@ export default function ContractsPage() {
               Browse and deploy production-ready smart contracts for the Algorand blockchain
             </p>
             <div className="text-sm text-muted-foreground">
-              {loading ? 'Loading...' : `${totalProjects + mockContracts.length} total smart contracts available`}
+              {loading ? 'Loading...' : `${totalProjects } total smart contracts available`}
             </div>
           </div>
 
