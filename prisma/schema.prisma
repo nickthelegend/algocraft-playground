@@ -12,5 +12,24 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+    directUrl = env("DIRECT_URL")
+
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  slugname     String   @unique
+  link         String?
+  repoUrl      String?
+  templateType String   @map("template_type")
+  userId       String   @map("user_id")
+  username     String
+  email        String
+  metadata     Json?    @map("json")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("projects")
 }

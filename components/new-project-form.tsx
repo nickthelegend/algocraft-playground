@@ -13,27 +13,43 @@ import { Loader2, X } from "lucide-react"
 
 interface NewProjectFormProps {
   onClose: () => void
+  onProjectCreated?: () => void
 }
 
-export function NewProjectForm({ onClose }: NewProjectFormProps) {
+export function NewProjectForm({ onClose, onProjectCreated }: NewProjectFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    slug: "",
-    contractName: "",
+    name: "",
     description: "",
-    template: "",
+    templateType: "",
+    repoUrl: "",
+    link: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    // Mock deployment - in production this would deploy to Algorand
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      const response = await fetch('/api/add-project', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
 
-    console.log("[v0] New project created:", formData)
-    setLoading(false)
-    onClose()
+      if (response.ok) {
+        onProjectCreated?.()
+        onClose()
+      } else {
+        console.error('Failed to create project')
+      }
+    } catch (error) {
+      console.error('Error creating project:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -52,27 +68,12 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="slug">Project Slug</Label>
+            <Label htmlFor="name">Project Name</Label>
             <Input
-              id="slug"
-              placeholder="my-awesome-contract"
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              required
-              className="bg-secondary/50"
-            />
-            <p className="text-xs text-muted-foreground">
-              This will be used in your project URL: algorand.dev/projects/{formData.slug || "your-slug"}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="contractName">Smart Contract Name</Label>
-            <Input
-              id="contractName"
-              placeholder="TokenFactory"
-              value={formData.contractName}
-              onChange={(e) => setFormData({ ...formData, contractName: e.target.value })}
+              id="name"
+              placeholder="Token Factory"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
               className="bg-secondary/50"
             />
@@ -91,16 +92,38 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="template">Template Type</Label>
-            <Select value={formData.template} onValueChange={(value) => setFormData({ ...formData, template: value })}>
-              <SelectTrigger id="template" className="bg-secondary/50">
+            <Label htmlFor="repoUrl">Repository URL (Optional)</Label>
+            <Input
+              id="repoUrl"
+              placeholder="https://github.com/username/repo"
+              value={formData.repoUrl}
+              onChange={(e) => setFormData({ ...formData, repoUrl: e.target.value })}
+              className="bg-secondary/50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="link">Live URL (Optional)</Label>
+            <Input
+              id="link"
+              placeholder="https://myproject.com"
+              value={formData.link}
+              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              className="bg-secondary/50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="templateType">Template Type</Label>
+            <Select value={formData.templateType} onValueChange={(value) => setFormData({ ...formData, templateType: value })}>
+              <SelectTrigger id="templateType" className="bg-secondary/50">
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tealscript">TealScript</SelectItem>
-                <SelectItem value="pyteal">PyTeal</SelectItem>
-                <SelectItem value="puyapy">Puya (Python)</SelectItem>
-                <SelectItem value="puyats">Puya (TypeScript)</SelectItem>
+                <SelectItem value="TealScript">TealScript</SelectItem>
+                <SelectItem value="PyTeal">PyTeal</SelectItem>
+                <SelectItem value="Puya (Python)">Puya (Python)</SelectItem>
+                <SelectItem value="Puya (TypeScript)">Puya (TypeScript)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -110,10 +133,10 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deploying...
+                  Creating...
                 </>
               ) : (
-                "Deploy Contract"
+                "Create Project"
               )}
             </Button>
             <Button type="button" variant="outline" onClick={onClose}>

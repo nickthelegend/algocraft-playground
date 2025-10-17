@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,42 +17,40 @@ interface DeployDashboardProps {
   }
 }
 
-const mockProjects = [
-  {
-    id: "1",
-    slug: "token-factory-v2",
-    name: "Token Factory V2",
-    description: "Advanced ASA token creation with governance features",
-    template: "TealScript",
-    status: "active",
-    deployedAt: "2025-01-10",
-    appId: "1234567890",
-  },
-  {
-    id: "2",
-    slug: "nft-marketplace",
-    name: "NFT Marketplace",
-    description: "Decentralized marketplace for digital collectibles",
-    template: "PyTeal",
-    status: "active",
-    deployedAt: "2025-01-08",
-    appId: "9876543210",
-  },
-  {
-    id: "3",
-    slug: "staking-protocol",
-    name: "Staking Protocol",
-    description: "Flexible staking with reward distribution",
-    template: "Puya (Python)",
-    status: "paused",
-    deployedAt: "2025-01-05",
-    appId: "5555555555",
-  },
-]
+interface Project {
+  id: string
+  name: string
+  description: string | null
+  slugname: string
+  templateType: string
+  link: string | null
+  repoUrl: string | null
+  createdAt: string
+}
 
 export function DeployDashboard({ user }: DeployDashboardProps) {
   const [showNewProject, setShowNewProject] = useState(false)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    fetchProjects()
+  }, [])
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/projects')
+      if (response.ok) {
+        const data = await response.json()
+        setProjects(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -78,7 +76,13 @@ export function DeployDashboard({ user }: DeployDashboardProps) {
         {/* New Project Form */}
         {showNewProject && (
           <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-            <NewProjectForm onClose={() => setShowNewProject(false)} />
+            <NewProjectForm 
+              onClose={() => setShowNewProject(false)} 
+              onProjectCreated={() => {
+                fetchProjects()
+                setShowNewProject(false)
+              }}
+            />
           </div>
         )}
 
@@ -103,7 +107,15 @@ export function DeployDashboard({ user }: DeployDashboardProps) {
           )}
 
           {/* Existing Projects */}
-          {mockProjects.map((project) => (
+          {loading ? (
+            <Card className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
+              </CardContent>
+            </Card>
+          ) : (
+            projects.map((project) => (
             <Card
               key={project.id}
               className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
@@ -115,39 +127,49 @@ export function DeployDashboard({ user }: DeployDashboardProps) {
                   <div className="space-y-1 flex-1">
                     <CardTitle className="text-xl">{project.name}</CardTitle>
                     <CardDescription className="text-xs font-mono text-muted-foreground">
-                      /{project.slug}
+                      /{project.slugname}
                     </CardDescription>
                   </div>
-                  <Badge variant={project.status === "active" ? "default" : "secondary"} className="text-xs">
-                    {project.status}
+                  <Badge variant="default" className="text-xs">
+                    active
                   </Badge>
                 </div>
-                <CardDescription className="text-sm leading-relaxed pt-2">{project.description}</CardDescription>
+                <CardDescription className="text-sm leading-relaxed pt-2">
+                  {project.description || 'No description provided'}
+                </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Template:</span>
                   <Badge variant="outline" className="border-primary/30 text-primary">
-                    {project.template}
+                    {project.templateType}
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">App ID:</span>
-                  <code className="text-xs font-mono text-foreground">{project.appId}</code>
-                </div>
+                {project.repoUrl && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Repository:</span>
+                    <a href={project.repoUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
+                      View Code
+                    </a>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Deployed:</span>
-                  <span className="text-foreground">{new Date(project.deployedAt).toLocaleDateString()}</span>
+                  <span className="text-muted-foreground">Created:</span>
+                  <span className="text-foreground">{new Date(project.createdAt).toLocaleDateString()}</span>
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button size="sm" variant="outline" className="flex-1 gap-2 bg-transparent">
-                    <ExternalLink className="h-3 w-3" />
-                    View
-                  </Button>
+                  {project.link && (
+                    <Button size="sm" variant="outline" className="flex-1 gap-2 bg-transparent" asChild>
+                      <a href={project.link} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3 w-3" />
+                        View
+                      </a>
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline">
                     <Settings className="h-3 w-3" />
                   </Button>
@@ -157,7 +179,8 @@ export function DeployDashboard({ user }: DeployDashboardProps) {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </main>
