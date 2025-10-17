@@ -16,13 +16,14 @@ datasource db {
 }
 
 model User {
-  id        String    @id
-  username  String    @unique
-  email     String    @unique
+  id        String     @id
+  username  String     @unique
+  email     String     @unique
   name      String?
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
   projects  Project[]
+  templates Template[]
 
   @@map("users")
 }
@@ -44,4 +45,38 @@ model Project {
   user         User     @relation(fields: [userId], references: [id])
 
   @@map("projects")
+}
+
+model Template {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  description  String
+  templateType String   @map("template_type")
+  code         Json
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  views        Int      @default(0)
+  likes        Int      @default(0)
+
+  @@index([slug])
+  @@index([userId])
+  @@index([templateType])
+  @@index([createdAt(sort: Desc)])
+  @@map("templates")
+}
+
+model PublishShare {
+  id          String   @id @default(uuid()) @db.Uuid
+  shareId     String   @unique @map("share_id")
+  code        Json
+  templateType String  @map("template_type")
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([shareId])
+  @@index([expiresAt])
+  @@map("publish_shares")
 }

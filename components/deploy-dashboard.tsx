@@ -34,14 +34,27 @@ interface Project {
   createdAt: string
 }
 
+interface Template {
+  id: string
+  slug: string
+  title: string
+  description: string
+  templateType: string
+  views: number
+  likes: number
+  createdAt: string
+}
+
 export function DeployDashboard({ user, externalDeployment }: DeployDashboardProps) {
   const [showNewProject, setShowNewProject] = useState(!!externalDeployment)
   const [projects, setProjects] = useState<Project[]>([])
+  const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     fetchProjects()
+    fetchTemplates()
   }, [])
 
   const fetchProjects = async () => {
@@ -55,6 +68,18 @@ export function DeployDashboard({ user, externalDeployment }: DeployDashboardPro
       console.error('Failed to fetch projects:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await fetch('/api/templates/user')
+      if (response.ok) {
+        const data = await response.json()
+        setTemplates(data.templates || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch templates:', error)
     }
   }
 
@@ -99,7 +124,7 @@ export function DeployDashboard({ user, externalDeployment }: DeployDashboardPro
           {!showNewProject && (
             <Card
               className="group cursor-pointer border-dashed border-2 border-border/50 bg-card/30 backdrop-blur transition-all hover:border-primary/50 hover:bg-card/50"
-              onClick={() => setShowNewProject(true)}
+              onClick={() => window.open(process.env.NEXT_PUBLIC_IDE_URL || 'http://localhost:3001', '_blank')}
             >
               <CardContent className="flex min-h-64 flex-col items-center justify-center gap-4 p-6">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary transition-all group-hover:bg-primary/20">
@@ -189,6 +214,42 @@ export function DeployDashboard({ user, externalDeployment }: DeployDashboardPro
             ))
           )}
         </div>
+
+        {/* Published Templates Section */}
+        {templates.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Published Templates</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {templates.map((template) => (
+                <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{template.title}</CardTitle>
+                    <CardDescription>{template.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Type:</span>
+                      <Badge variant="outline">{template.templateType}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Views:</span>
+                      <span>{template.views}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Likes:</span>
+                      <span>{template.likes}</span>
+                    </div>
+                    <Button size="sm" variant="outline" className="w-full mt-2" asChild>
+                      <a href={`/templates/${template.slug}`}>
+                        View Template
+                      </a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   )
