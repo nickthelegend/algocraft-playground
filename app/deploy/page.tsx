@@ -1,9 +1,21 @@
 import { getUser } from "@/lib/auth"
 import { LoginForm } from "@/components/login-form"
 import { DeployDashboard } from "@/components/deploy-dashboard"
+import { cookies } from "next/headers"
 
 export default async function DeployPage() {
   const user = await getUser()
+  const cookieStore = await cookies()
+  const deploymentDataCookie = cookieStore.get('deployment-data')
+  
+  let externalDeployment = null
+  if (deploymentDataCookie) {
+    try {
+      externalDeployment = JSON.parse(deploymentDataCookie.value)
+    } catch (error) {
+      console.error('Failed to parse deployment data:', error)
+    }
+  }
 
   if (!user) {
     return (
@@ -16,5 +28,5 @@ export default async function DeployPage() {
     )
   }
 
-  return <DeployDashboard user={user} />
+  return <DeployDashboard user={user} externalDeployment={externalDeployment} />
 }

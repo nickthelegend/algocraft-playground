@@ -23,7 +23,6 @@ export function NewProjectForm({ onClose, onProjectCreated }: NewProjectFormProp
     description: "",
     templateType: "",
     repoUrl: "",
-    link: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,19 +102,12 @@ export function NewProjectForm({ onClose, onProjectCreated }: NewProjectFormProp
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="link">Live URL (Optional)</Label>
-            <Input
-              id="link"
-              placeholder="https://myproject.com"
-              value={formData.link}
-              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-              className="bg-secondary/50"
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="templateType">Template Type</Label>
-            <Select value={formData.templateType} onValueChange={(value) => setFormData({ ...formData, templateType: value })}>
+            <Select 
+              value={formData.templateType} 
+              onValueChange={(value) => setFormData({ ...formData, templateType: value })}
+              disabled={!!externalDeployment}
+            >
               <SelectTrigger id="templateType" className="bg-secondary/50">
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>

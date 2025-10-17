@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,15 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
+
+interface Project {
+  id: string
+  name: string
+  description: string | null
+  templateType: string
+  createdAt: string
+  updatedAt: string
+}
 
 const mockContracts = [
   {
@@ -175,14 +184,38 @@ export default function ContractsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const [currentPage, setCurrentPage] = useState(1)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+  const [totalProjects, setTotalProjects] = useState(0)
+
+  useEffect(() => {
+    fetchAllProjects()
+  }, [])
+
+  const fetchAllProjects = async () => {
+    try {
+      const response = await fetch('/api/projects/all')
+      if (response.ok) {
+        const data = await response.json()
+        setProjects(data)
+        setTotalProjects(data.length)
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Filter and sort contracts
   const filteredAndSortedContracts = useMemo(() => {
-    const filtered = mockContracts.filter(
+    const allContracts = [...projects, ...mockContracts]
+    const filtered = allContracts.filter(
       (contract) =>
         contract.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contract.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contract.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
+        (contract.description && contract.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        ('tags' in contract && contract.tags?.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))) ||
+        ('templateType' in contract && contract.templateType.toLowerCase().includes(searchQuery.toLowerCase()))
     )
 
     // Sort by date
@@ -193,7 +226,7 @@ export default function ContractsPage() {
     })
 
     return filtered
-  }, [searchQuery, sortOrder])
+  }, [searchQuery, sortOrder, projects])
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedContracts.length / ITEMS_PER_PAGE)
@@ -223,6 +256,9 @@ export default function ContractsPage() {
             <p className="text-lg text-muted-foreground">
               Browse and deploy production-ready smart contracts for the Algorand blockchain
             </p>
+            <div className="text-sm text-muted-foreground">
+              {loading ? 'Loading...' : `${totalProjects + mockContracts.length} total smart contracts available`}
+            </div>
           </div>
 
           {/* Search and Filter Bar */}
@@ -264,15 +300,27 @@ export default function ContractsPage() {
 
           {/* Results count */}
           <div className="text-sm text-muted-foreground">
-            Showing {paginatedContracts.length} of {filteredAndSortedContracts.length} contracts
+            {loading ? 'Loading contracts...' : `Showing ${paginatedContracts.length} of ${filteredAndSortedContracts.length} contracts`}
           </div>
         </div>
 
         {/* Contracts Grid */}
-        {paginatedContracts.length > 0 ? (
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : paginatedContracts.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {paginatedContracts.map((contract) => {
-              const Icon = contract.icon
+              const Icon = 'icon' in contract ? contract.icon : Code2
+              const isRealProject = 'templateType' in contract
               return (
                 <Card
                   key={contract.id}
@@ -286,25 +334,35 @@ export default function ContractsPage() {
                         <Icon className="h-6 w-6" />
                       </div>
                       <Badge variant="secondary" className="text-xs">
-                        {contract.language}
+                        {isRealProject ? (contract as Project).templateType : (contract as any).language}
                       </Badge>
                     </div>
                     <CardTitle className="text-xl">{contract.name}</CardTitle>
-                    <CardDescription className="text-sm leading-relaxed">{contract.description}</CardDescription>
+                    <CardDescription className="text-sm leading-relaxed">
+                      {contract.description || 'No description available'}
+                    </CardDescription>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
-                    <div className="flex gap-2 flex-wrap">
-                      {contract.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs border-primary/30 text-primary">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+                    {!isRealProject && 'tags' in contract && (
+                      <div className="flex gap-2 flex-wrap">
+                        {(contract as any).tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-xs border-primary/30 text-primary">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">By {contract.author}</span>
-                      <span className="text-muted-foreground">{contract.deployments.toLocaleString()} deploys</span>
+                      <span className="text-muted-foreground">
+                        {isRealProject ? 'User Project' : `By ${(contract as any).author}`}
+                      </span>
+                      {!isRealProject && (
+                        <span className="text-muted-foreground">
+                          {(contract as any).deployments.toLocaleString()} deploys
+                        </span>
+                      )}
                     </div>
 
                     <div className="text-xs text-muted-foreground">
@@ -319,7 +377,7 @@ export default function ContractsPage() {
               )
             })}
           </div>
-        ) : (
+        )) : (
           <Card className="border-border/50 bg-card/50 backdrop-blur">
             <CardContent className="flex min-h-64 flex-col items-center justify-center gap-4 p-12">
               <Search className="h-12 w-12 text-muted-foreground" />

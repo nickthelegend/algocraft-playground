@@ -15,6 +15,12 @@ interface DeployDashboardProps {
     email: string
     name: string
   }
+  externalDeployment?: {
+    templateType: string
+    signedURL: string
+    userId: string
+    timestamp: number
+  } | null
 }
 
 interface Project {
@@ -28,8 +34,8 @@ interface Project {
   createdAt: string
 }
 
-export function DeployDashboard({ user }: DeployDashboardProps) {
-  const [showNewProject, setShowNewProject] = useState(false)
+export function DeployDashboard({ user, externalDeployment }: DeployDashboardProps) {
+  const [showNewProject, setShowNewProject] = useState(!!externalDeployment)
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -82,6 +88,7 @@ export function DeployDashboard({ user }: DeployDashboardProps) {
                 fetchProjects()
                 setShowNewProject(false)
               }}
+              externalDeployment={externalDeployment}
             />
           </div>
         )}
