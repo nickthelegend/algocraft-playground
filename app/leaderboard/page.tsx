@@ -1,11 +1,13 @@
 import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Trophy, TrendingUp, Calendar, Code2 } from "lucide-react"
 import Link from "next/link"
+
+const prisma = new PrismaClient()
+
+export const dynamic = 'force-dynamic'
 
 export default async function LeaderboardPage() {
   // Get top users by project count
