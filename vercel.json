@@ -1,0 +1,12 @@
+{
+  "buildCommand": "prisma generate && next build",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "DATABASE_URL": "@database_url",
+    "DIRECT_URL": "@direct_url",
+    "NEXT_PUBLIC_RECAPTCHA_SITE_KEY": "@recaptcha_site_key",
+    "RECAPTCHA_SECRET_KEY": "@recaptcha_secret_key",
+    "NEXT_PUBLIC_IDE_URL": "@ide_url"
+  }
+}
